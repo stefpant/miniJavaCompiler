@@ -5,4 +5,4 @@
 * make execute < Input_to_translate
 * make clean
 
-If the input parsed successfully the result translated program is saved in Main.java
+If the input parsed successfully the result translated program is saved in Main.java!
