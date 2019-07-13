@@ -1,0 +1,207 @@
+/* Simple +/-/* expression language; parser evaluates constant expressions on the fly*/
+/**
+ *  Package and Import Specifications
+ */
+import java_cup.runtime.*;
+
+/**
+ *  Usercode Components
+ */
+parser code {:
+    // Connect this parser to a scanner!
+    Scanner s;
+    Parser(Scanner s){ this.s=s; }
+:}
+
+/* define how to connect to the scanner! */
+scan with {: return s.next_token(); :};
+
+/**
+ *  Symbol Lists
+ */
+
+/* Terminals (tokens returned by the scanner). */
+terminal            PLUS, LPAREN, RPAREN, LBRACE, RBRACE, COMMA, IF, ELSE, PREFIX, SUFFIX;          
+terminal String     IDENTIFIER, STRINGLITERAL;
+
+/*  Non terminals */
+non terminal                program;
+non terminal String         fun_def_list, expr_list, fun_def, fd_args;
+non terminal String         expr, fun_call, fc_args, cond;//main body
+non terminal String         expr_plus, fun_call_plus, fc_args_plus, cond_plus;//fun def body
+
+
+/**
+ *  Precedence Declarations
+ */
+precedence left PREFIX, SUFFIX;
+precedence left IF,ELSE;
+precedence left PLUS;
+
+
+/**
+ *  The Grammar Rules
+ */
+
+
+
+program         ::= fun_def_list:fdl expr_list:el//el=list of expressions in main,fdl=list of func definitions
+    {:
+        System.out.println("public class Main {\n\tpublic static void main(String[] args) {");
+        System.out.println(el);//el-> all expressions in main
+        System.out.println("\t}");//closing main
+        System.out.println(fdl);//all function definitions
+        System.out.println("}");//closing Main
+    :}
+;
+
+fun_def_list    ::= fun_def_list:fdl fun_def:fd
+    {:
+        RESULT = fdl + "\n\n" + fd;
+    :}
+                |   fun_def:fd
+    {:
+        RESULT = "\n" + fd;
+    :}
+;
+
+//expr_plus=expression expr with identifiers
+//also funcion body has only one expression-->ep
+fun_def         ::= IDENTIFIER:id LPAREN IDENTIFIER:id2 fd_args:fda RPAREN LBRACE expr_plus:ep RBRACE
+    {:
+        RESULT = "\tpublic static String "+id+"(String "+id2 + fda+") {\n\t\treturn "+ep+";\n\t}";
+    :}
+                |   IDENTIFIER:id LPAREN RPAREN LBRACE expr_plus:ep RBRACE//without args
+    {:
+        RESULT = "\tpublic static String "+id+"() {\n\t\treturn "+ep+";\n\t}";
+    :}
+;
+
+fd_args         ::=
+    {:
+        RESULT = "";
+    :}
+                |   COMMA IDENTIFIER:id fd_args:fda
+    {:
+        RESULT = ", String " + id + fda;
+    :}
+;
+
+
+expr_list       ::= expr:e expr_list:el
+    {:
+        RESULT = "\t\tSystem.out.println(" + e + ");\n" + el;
+    :}
+                |   expr:e//main can't be empty
+    {:
+        RESULT = "\t\tSystem.out.println(" + e + ");";
+    :}
+;
+
+
+//results here goes to main body
+expr            ::= IF LPAREN cond:c RPAREN expr:e1 ELSE expr:e2
+    {:
+        RESULT = "(("+c+")?"+e1+":"+e2+")";
+    :}
+                |   expr:e1 PLUS expr:e2
+    {:
+        RESULT = e1 + " + " + e2;
+    :}
+                |   STRINGLITERAL:sl
+    {:
+        RESULT = "\"" + sl + "\"";
+    :}
+                |   fun_call:fc
+    {:
+        RESULT = fc;
+    :}
+;
+
+//manage arguments like in function definition
+fun_call        ::= IDENTIFIER:id LPAREN expr:e fc_args:fca RPAREN
+    {:
+        RESULT = id + "(" + e + fca + ")";
+    :}
+                |   IDENTIFIER:id LPAREN RPAREN
+    {:
+        RESULT = id + "()";
+    :}
+;
+
+fc_args         ::= COMMA expr:e fc_args:fca
+    {:
+        RESULT = ", " + e + fca;
+    :}
+                |
+    {:
+        RESULT = "";
+    :}
+;
+
+cond            ::= expr:e1 PREFIX expr:e2
+    {:
+        RESULT = "("+e2+").startsWith("+e1+")";
+    :}
+                |   expr:e1 SUFFIX expr:e2
+    {:
+        RESULT = "("+e2+").endsWith("+e1+")";
+    :}
+;
+
+
+//results here goes to function definition body
+//same rules but expressions now can recognise identifiers
+
+expr_plus       ::= IF LPAREN cond_plus:c RPAREN expr_plus:e1 ELSE expr_plus:e2
+    {:
+        RESULT = "(("+c+")?"+e1+":"+e2+")";
+    :}
+                |   expr_plus:e1 PLUS expr_plus:e2
+    {:
+        RESULT = e1 + " + " + e2;
+    :}
+                |   STRINGLITERAL:sl
+    {:
+        RESULT = "\"" + sl + "\"";
+    :}
+                |   IDENTIFIER:id
+    {:
+        RESULT = id;
+    :}
+                |   fun_call_plus:fc
+    {:
+        RESULT = fc;
+    :}
+;
+
+fun_call_plus   ::= IDENTIFIER:id LPAREN expr_plus:e fc_args_plus:fca RPAREN
+    {:
+        RESULT = id + "(" + e + fca + ")";
+    :}
+                |   IDENTIFIER:id LPAREN RPAREN
+    {:
+        RESULT = id + "()";
+    :}
+;
+
+fc_args_plus    ::= COMMA expr_plus:e fc_args_plus:fca
+    {:
+        RESULT = "," + e + fca;
+    :}
+                |
+    {:
+        RESULT = "";
+    :}
+;
+
+cond_plus       ::= expr_plus:e1 PREFIX expr_plus:e2
+    {:
+        RESULT = "("+e2+").startsWith("+e1+")";
+    :}
+                |   expr_plus:e1 SUFFIX expr_plus:e2
+    {:
+        RESULT = "("+e2+").endsWith("+e1+")";
+    :}
+;
+

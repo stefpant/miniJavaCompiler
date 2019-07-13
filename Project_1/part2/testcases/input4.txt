@@ -1,0 +1,26 @@
+printt(x){
+    x
+}
+
+answer(){
+    if("y" prefix "y")
+        "yes"
+    else
+        "no"
+    +
+    if("y" prefix "y")
+        "+yes"
+    else
+        "+no"
+}
+answer()
+
+printt(if("a" prefix "y")
+    "yes"
+else
+    "no"
++
+if("y" prefix "y")
+    "+yes"
+else
+    "+no")

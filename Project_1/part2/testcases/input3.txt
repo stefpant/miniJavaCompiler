@@ -1,0 +1,16 @@
+name() {
+    "John"
+}
+
+surname() {
+    "Doe"
+}
+
+fullname(first_name, sep , last_name) {
+    first_name + sep + last_name
+}
+
+
+name()
+surname()
+fullname(if("n" prefix "n" + "a") "!" + name() else "F" , " " , surname())
