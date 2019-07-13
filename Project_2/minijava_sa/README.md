@@ -6,3 +6,5 @@
 * make clean
 
 ### Output: variable and function offsets (or parse/syntax error)
+
+### Inside examples folder can be found a lot of files to give as inputs
